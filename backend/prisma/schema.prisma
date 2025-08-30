@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  expenses    Expense[]
+
+  @@map("projects")
+}
+
+model Expense {
+  id            String     @id @default(cuid())
+  date          DateTime
+  project       String
+  payee         String
+  referenceNo   String?
+  subtotal      Float      @default(0)
+  totalDiscount Float      @default(0)
+  totalTax      Float      @default(0)
+  grandTotal    Float      @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  
+  // Optional relation to Project model
+  projectRef    Project?   @relation(fields: [projectId], references: [id])
+  projectId     String?
+  
+  // Related line items
+  lineItems     LineItem[]
+
+  @@map("expenses")
+}
+
+model LineItem {
+  id          String  @id @default(cuid())
+  description String
+  quantity    Float   @default(1)
+  rate        Float
+  discount    Float   @default(0)
+  tax         Float   @default(0)
+  amount      Float
+  
+  // Foreign key to expense
+  expense     Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  expenseId   String
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("line_items")
+}
